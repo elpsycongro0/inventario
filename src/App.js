@@ -1,5 +1,4 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import {React, useState} from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Input, Button, Avatar, Breadcrumb, Layout } from 'antd';
 import { LogoutOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
@@ -11,16 +10,34 @@ import Login from "./pages/login/login";
 import Principal from "./pages/principal/principal";
 import Articulos from "./pages/articulos/articulos";
 import Details from "./pages/details/details"
+import { app } from './Firebase/firebase';
+import { is } from '@babel/types';
 
 const { Title } = Typography;
 const { Header, Footer, Sider, Content} = Layout;
 
+function LogButton({isLogged, setisLogged}){
+  function logout(){
+    setisLogged(false);
+  }
+  if(isLogged){
+    return(
+      <Button type="primary" danger style={{float:'right'}} icon={<LogoutOutlined />} onClick={logout} href="/login">Salir</Button>
+    );
+  }
+  else{
+    return(
+      <Button type="primary" style={{float:'right'}} icon={<UserOutlined />} href="/login">Ingresar</Button>
+    );
+  }
+}
 function App() {
+  const[isLogged,setisLogged] = useState(false);
   return(
     <div className="App">
       <Layout>
         <Header style={{minHeight: "8vh", padding:20}}>
-          <Button type="primary" danger style={{float:'right'}} icon={<LogoutOutlined />} href="/login">Salir</Button>
+          <LogButton isLogged={isLogged} setisLogged={setisLogged}></LogButton>
           <Title style={{color:'white'}} level={3}>LOGO WEB</Title>
         </Header>
         <Layout style={{minHeight: "92vh"}}>
@@ -28,7 +45,7 @@ function App() {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="login/" element={<Login />} />
+                <Route path="login/" element={<Login isLogged={isLogged} setisLogged={setisLogged}/>} />
                 <Route path="principal/" element={<Principal />} />
                 <Route path="articulos/*" element={<Articulos />} />
                 <Route path="details/*" element={<Details />} />
