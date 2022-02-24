@@ -1,9 +1,15 @@
 import { React, useEffect, useState} from 'react';
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 import { useSearchParams } from "react-router-dom";
-import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Tabs, DatePicker } from 'antd';
-import { database } from '../../Firebase/firebase';//database ref o  firebase.js
-import { ref, set, push, onValue } from "firebase/database";//database
+import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Tabs, Divider, Progress } from 'antd';
+import { database, storage } from '../../Firebase/firebase';//database ref o  firebase.js
+import { ref, set, push, onValue, get, child } from "firebase/database";//database
+import { uploadBytesResumable, getDownloadURL, ref as sRef } from "firebase/storage";
+
+
+import ImageViewer from './components/imageViewer';
+
+const { Title } = Typography;
 
 const {TabPane} = Tabs;
 
@@ -184,8 +190,12 @@ function Details(){
 
   const [detailData, setDetailData] = useState([]);
   const [historyData, setHistoryData] = useState([]);
+  const [progress, setProgress] = useState(0);
+  const [imageList, setImageList] = useState([]);
   const [tabState, setTabState] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
+  
+
 
   useEffect(() =>{
     const articulosRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/detalles");
@@ -220,8 +230,20 @@ function Details(){
         db = new Date(b["fecha"]);
         return db - da;
       });
-      console.log(tempEntryList);
       setHistoryData(tempEntryList);
+    })
+  }, []);
+  useEffect(() =>{
+    const imagenesRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/imagenes");
+    onValue(imagenesRef, (snapshot) => {
+      const data = snapshot.val();
+      const tempImgList = [];
+      for(let i in data){
+        if(data[i]["url"]){
+          tempImgList.push(data[i]["url"]);
+        }
+      }
+      setImageList(tempImgList);
     })
   }, []);
 
@@ -230,7 +252,6 @@ function Details(){
     for(let i in data){
       entryObject[data[i]["atributo"]] = data[i]["valor"];
     }
-    console.log(entryObject);
     const articulosRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/detalles");
     set(articulosRef,entryObject);
   }
@@ -245,8 +266,7 @@ function Details(){
     set(historialRef,row);
   }
   function nuevaEntrada(){
-    if(tabState===1){
-      console.log(1);
+    if(tabState==="1"){
       const articulosRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/detalles");
       const entryObject = {};
       for(let i in detailData){
@@ -256,7 +276,6 @@ function Details(){
       set(articulosRef,entryObject);
     }
     if(tabState==="2"){
-      console.log(2);
       const articulosRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/historial");
       const entryObject = {
         fecha :new Date().toISOString().split('T')[0],
@@ -269,8 +288,46 @@ function Details(){
   }
   function manageOnChange(key){
     setTabState(key);
-  }
-  
+  };
+  function handleImageInputChange(e){
+    if(e.target.files[0]){
+      const imagenesRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/imagenes");
+      get(child(imagenesRef,'contador')).then((snapshot) => {
+        let contador;
+        if (snapshot.exists()) {
+          contador = snapshot.val();
+        } else {
+          set(child(imagenesRef,'contador'),0);
+          contador = 0;
+        }
+        set(child(imagenesRef,'contador'),contador+1);
+        //upload image and get url
+        let nombreImagen = searchParams.get("name")+searchParams.get("id")+"-"+contador.toString()+".jpg";
+        const imgRef = sRef(storage,"images/"+nombreImagen);
+        const uploadTask = uploadBytesResumable(imgRef, e.target.files[0]);
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+            const uploadprogress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            console.log('Upload is ' + uploadprogress + '% done');
+            setProgress(uploadprogress);
+          },
+          (error) => {},
+          () => {
+            // Upload completed successfully, now we can get the download URL
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              //db image add
+              push(imagenesRef, {
+                nombre: nombreImagen,
+                url: downloadURL,
+              });
+            });
+          }
+        );
+      });
+    }
+    
+  };
   return(
     <div>
       <div className ="contentHeader" style={{padding: "5px"}}>
@@ -283,6 +340,15 @@ function Details(){
         </TabPane>
         <TabPane tab="Historial" key="2">
           <EditableTable data={historyData} setData={setHistoryData} saveData={saveDataHistorial} preColums={columns2}></EditableTable>
+        </TabPane>
+        <TabPane tab="Imágenes" key="3">
+          <div>
+            <Title level={5}>Subir imagen</Title>
+            <Input type="file" onChange={handleImageInputChange}></Input>
+            <Progress percent={progress} size="small" />
+            <Divider/>
+            <ImageViewer imageList={imageList}></ImageViewer>
+          </div>
         </TabPane>
       </Tabs>
     </div>

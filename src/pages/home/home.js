@@ -69,9 +69,9 @@ function Home() {
             <div style={{ background:'#fff', padding: 24}}>
               <img style={{margin:"auto",maxHeight: "70vh", maxWidth: "100%"}} src="web1.jpg"></img>
             </div>
-            <div style={{ display: "flex", justifyContent: "center" }}>
+            {/* <div style={{ display: "flex", justifyContent: "center" }}>
               <Notes/>
-            </div>
+            </div> */}
     </div>
   );
 }

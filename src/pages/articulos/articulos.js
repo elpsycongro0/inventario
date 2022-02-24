@@ -1,5 +1,5 @@
 import { React, useEffect, useState } from 'react';
-import { Input, Button, Image } from 'antd';
+import { Input, Button } from 'antd';
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 import { useSearchParams } from "react-router-dom";
 import { Typography } from 'antd';
@@ -23,7 +23,14 @@ function Articulos(){
       const tempEntryList = [];
       for(let i in data){
         let entryObject = data[i];
+        const tempImgList = [];
+        for(let j in data[i]["imagenes"]){
+          if(data[i]["imagenes"][j]["url"]){
+            tempImgList.push(data[i]["imagenes"][j]["url"]);
+          }
+        }
         entryObject["key"] = i;
+        entryObject["listaImagenes"] = tempImgList;
         tempEntryList.push(entryObject);
       }
       setData(tempEntryList);
@@ -49,7 +56,7 @@ function Articulos(){
       {data.map( (articulo, c) => {
         return(
           <div key={articulo.key}>
-            <Card images = {images} id={articulo.key} title={articulo.detalles.Nombre}/>
+            <Card images = {articulo.listaImagenes} id={articulo.key} title={articulo.detalles.Nombre}/>
           </div>
         );
       })}

@@ -59,7 +59,7 @@ const EditableTable = (props) => {
         let entryObject = data[i];
         entryObject["key"] = i;
         tempEntryList.push(entryObject);
-        console.log(entryObject);
+        //console.log(entryObject);
       }
       setData(tempEntryList);
     })
@@ -178,21 +178,21 @@ const EditableTable = (props) => {
     };
   });
   function verFotos(e){
-    let imgCount = 1;
-    let imgCountToStr = ("00" + imgCount).slice(-2);
-    let url = "./" + Object.values(e.target)[1]['value']+imgCountToStr+".jpg";
-    let allImages = [];
-    allImages = allImages.concat(url);
-    imgCount += 1;
-    imgCountToStr = ("00" + imgCount).slice(-2);
-    url = "./" + Object.values(e.target)[1]['value']+imgCountToStr+".jpg";
-    allImages = allImages.concat(url);
-    imgCount += 1;
-    imgCountToStr = ("00" + imgCount).slice(-2);
-    url = "./" + Object.values(e.target)[1]['value']+imgCountToStr+".jpg";
-    allImages = allImages.concat(url);
-    console.log(allImages);
-    props.imageUpdate(allImages);
+    const articulosRef = ref(database, "Articulos/"+Object.values(e.target)[1]['value']);
+    onValue(articulosRef, (snapshot) => {
+      const data = snapshot.val();
+      const tempImgList = [];
+      for(let i in data){
+        for(let j in data[i]["imagenes"]){
+          if(data[i]["imagenes"][j]["url"]){
+            tempImgList.push(data[i]["imagenes"][j]["url"]);
+          }
+        }
+      }
+      console.log(tempImgList);
+      props.imageUpdate(tempImgList);
+    })
+    
   }
   return (
     <Form form={form} component={false}>
