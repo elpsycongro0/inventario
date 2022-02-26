@@ -15,6 +15,7 @@ function Articulos(){
   let images = ["", "", ""];
   let [searchParams, setSearchParams] = useSearchParams();
   const [data, setData] = useState([]);
+  const [allData, setAllData] = useState([]);
 
   useEffect(() =>{
     const articulosRef = ref(database, "Articulos/"+searchParams.get("name"));
@@ -34,9 +35,20 @@ function Articulos(){
         tempEntryList.push(entryObject);
       }
       setData(tempEntryList);
+      setAllData(tempEntryList);
     })
   }, []);
-
+  function onSearch(query){
+    const newData = [];
+    query = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    for(let i in allData){
+      let normlizedEntry = allData[i]["detalles"]["Nombre"].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+      if(normlizedEntry.includes(query)){
+        newData.push(allData[i]);
+      }
+    }
+    setData(newData);
+  }
   function nuevoArticulo(){
     const articulosRef = ref(database, "Articulos/"+searchParams.get("name"));
     push(articulosRef,{
@@ -46,7 +58,7 @@ function Articulos(){
   return (
     <div>
       <div className ="contentHeader" style={{padding: "5px"}}>
-        <Search placeholder="Buscar"  allowClear style={{ width: 200}} />{/*onSearch={onSearch}*/}
+        <Search placeholder="Buscar"  allowClear style={{ width: 200}} onSearch={onSearch} />
         <Button type="primary" style={{float: "right"}} icon={<PlusOutlined />} onClick={nuevoArticulo}></Button>
         <Button type="primary" style={{float: "right"}} icon={<ArrowLeftOutlined />} href="/principal"></Button>
       </div>

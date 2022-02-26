@@ -226,6 +226,19 @@ function Principal() {
     background: '#364d79',
   }; 
 
+  function onSearch(query){
+    console.log();
+    // const newData = [];
+    // query = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    // for(let i in allData){
+    //   let normlizedEntry = allData[i]["detalles"]["Nombre"].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    //   if(normlizedEntry.includes(query)){
+    //     newData.push(allData[i]);
+    //   }
+    // }
+    // setData(newData);
+  }
+
   function nuevoArticulo(){
     const inventarioRef = ref(database, "Inventario");
     const entry ={

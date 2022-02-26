@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Tabs, Divider, Progress } from 'antd';
 import { database, storage } from '../../Firebase/firebase';//database ref o  firebase.js
 import { ref, set, push, onValue, get, child } from "firebase/database";//database
-import { uploadBytesResumable, getDownloadURL, ref as sRef } from "firebase/storage";
+import { uploadBytesResumable, getDownloadURL, ref as sRef, deleteObject } from "firebase/storage";
 
 
 import ImageViewer from './components/imageViewer';
@@ -48,7 +48,7 @@ const EditableCell = ({
   );
 };
 
-const EditableTable = ({data, setData, saveData, preColums}) => {
+const EditableTable = ({data, setData, saveData, preColums, deleteData}) => {
   const [form] = Form.useForm();
   //const [data, setData] = useState([]);
   const [editingKey, setEditingKey] = useState('');
@@ -66,6 +66,15 @@ const EditableTable = ({data, setData, saveData, preColums}) => {
   };
 
   const cancel = () => {
+    setEditingKey('');
+  };
+  const deleteEntry = (record) => {
+    //console.log(record);
+    if(record["atributo"]==="Nombre"){
+      setEditingKey('');
+      return;
+    }
+    deleteData(record);
     setEditingKey('');
   };
 
@@ -109,6 +118,9 @@ const EditableTable = ({data, setData, saveData, preColums}) => {
             </Typography.Link>
             <Popconfirm title="Cancelar edición?" onConfirm={cancel}>
               <a>Cancelar</a>
+            </Popconfirm>
+            <Popconfirm title="Eliminar entrada?" onConfirm={() => deleteEntry(record)}>
+              <a> Eliminar</a>
             </Popconfirm>
           </span>
         ) : (
@@ -256,14 +268,26 @@ function Details(){
     set(articulosRef,entryObject);
   }
   function saveDataHistorial(data, row){
-    let key = ""
+    let key = "";
+    let date = "";
     for(let i in data){
       if(data[i]["fecha"]===row["fecha"] && data[i]["ocurrencia"]===row["ocurrencia"] && data[i]["descripcion"]===row["descripcion"]){
         key = data[i]["key"];
+        date = data[i]["date"];
       }
     }
     const historialRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/historial/"+key);
+    row["date"] = date;
     set(historialRef,row);
+  }
+  function deleteData(record){
+    const articulosRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/detalles");
+    set(child(articulosRef,record["atributo"]),null);
+  }
+  function deleteDataHistorial(record){
+    console.log(record);
+    const historialRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/historial/");
+    set(child(historialRef,record["key"]),null);
   }
   function nuevaEntrada(){
     if(tabState==="1"){
@@ -281,6 +305,7 @@ function Details(){
         fecha :new Date().toISOString().split('T')[0],
         ocurrencia: "OCURRENCIA",
         descripcion: "descripcion",
+        date: Date.now(),
       }
       
       push(articulosRef,entryObject);
@@ -328,6 +353,19 @@ function Details(){
     }
     
   };
+  function borrarImagen(url){
+    const imagenesRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/imagenes");
+    get(imagenesRef).then((snapshot) => {
+      for(let i in snapshot.val()){
+        if(snapshot.val()[i]["url"]===url)
+          //console.log(snapshot.val()[i]["nombre"]);
+          //borrar
+          set(child(imagenesRef,i),null);
+          const imgRef = sRef(storage,"images/"+snapshot.val()[i]["nombre"]);
+          deleteObject(imgRef);
+      }
+    });
+  }
   return(
     <div>
       <div className ="contentHeader" style={{padding: "5px"}}>
@@ -336,10 +374,10 @@ function Details(){
       </div>
       <Tabs  defaultActiveKey="1" style={{width: "100%"}} onChange={manageOnChange}>
         <TabPane tab="Detalles" key="1">
-          <EditableTable data={detailData} setData={setDetailData} saveData={saveData} preColums={columns}></EditableTable>
+          <EditableTable data={detailData} setData={setDetailData} saveData={saveData} deleteData={deleteData} preColums={columns}></EditableTable>
         </TabPane>
         <TabPane tab="Historial" key="2">
-          <EditableTable data={historyData} setData={setHistoryData} saveData={saveDataHistorial} preColums={columns2}></EditableTable>
+          <EditableTable data={historyData} setData={setHistoryData} saveData={saveDataHistorial} deleteData={deleteDataHistorial} preColums={columns2}></EditableTable>
         </TabPane>
         <TabPane tab="Imágenes" key="3">
           <div>
@@ -347,7 +385,7 @@ function Details(){
             <Input type="file" onChange={handleImageInputChange}></Input>
             <Progress percent={progress} size="small" />
             <Divider/>
-            <ImageViewer imageList={imageList}></ImageViewer>
+            <ImageViewer imageList={imageList} borrarImagen={borrarImagen}></ImageViewer>
           </div>
         </TabPane>
       </Tabs>
