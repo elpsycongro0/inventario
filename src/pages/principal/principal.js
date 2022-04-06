@@ -1,7 +1,7 @@
 import {React, useState, useEffect} from 'react';
 import {Input, Carousel , Table, Tag, InputNumber, Popconfirm, Form, Typography, Button, Image } from 'antd';
 import { database } from '../../Firebase/firebase';//database ref o  firebase.js
-import { ref, set, push, onValue } from "firebase/database";//database
+import { ref, set, push, onValue, get, child, remove } from "firebase/database";//database
 
 const { Search } = Input;
 
@@ -42,28 +42,12 @@ const EditableCell = ({
   );
 };
 
-const EditableTable = (props) => {
+const EditableTable = ({data, setData, imageUpdate, preColums, deleteData}) => {
   const [form] = Form.useForm();
-  const [data, setData] = useState([]);
+  
   const [editingKey, setEditingKey] = useState('');
 
   const isEditing = (record) => record.key === editingKey;
-
-  
-  useEffect(() =>{
-    const inventarioRef = ref(database, "Inventario");
-    onValue(inventarioRef, (snapshot) => {
-      const data = snapshot.val();
-      const tempEntryList = [];
-      for(let i in data){
-        let entryObject = data[i];
-        entryObject["key"] = i;
-        tempEntryList.push(entryObject);
-        //console.log(entryObject);
-      }
-      setData(tempEntryList);
-    })
-  }, []);
 
   const edit = (record) => {
     form.setFieldsValue({
@@ -79,6 +63,14 @@ const EditableTable = (props) => {
   const cancel = () => {
     setEditingKey('');
   };
+  const deleteEntry = (record) => {
+    // if(record["atributo"]==="Nombre"){
+    //   setEditingKey('');
+    //   return;
+    // }
+    deleteData(record);
+    setEditingKey('');
+  };
 
   const save = async (key) => {
     try {
@@ -89,8 +81,15 @@ const EditableTable = (props) => {
       if (index > -1) {
         const inventarioRef = ref(database, "Inventario/"+key);
         set(inventarioRef,row);
-
         const item = newData[index];
+        if(row["articulo"] != item["articulo"]){
+          const refToEdit = ref(database, "Articulos/");
+          const childO = child(refToEdit, item["articulo"]);
+          get(childO).then(function(snapshot) {
+            set(child(refToEdit, row["articulo"]), snapshot.val());
+            remove(childO);
+          });
+        }
         newData.splice(index, 1, { ...item, ...row });
         setData(newData);
         setEditingKey('');
@@ -103,34 +102,11 @@ const EditableTable = (props) => {
       console.log('Validate Failed:', errInfo);
     }
   };
-  const columns = [
+
+  const columns = preColums.concat([
     {
-      title: 'Categoria',
-      dataIndex: 'categoria',
-      width: "30%",
-      editable: true,
-    },
-    {
-      title: 'Articulo',
-      dataIndex: 'articulo',
-      width: "40%",
-      editable: true,
-      render: (text, record) => (
-        <div>
-            <a href={"/articulos?name="+text}>{text}</a>
-        </div>
-      ),
-    },
-    {
-      title: 'Cant.',
-      dataIndex: 'cantidad',
-      width: "10%",
-      editable: true,
-    },
-    {
-      title: 'Operacion',
+      title: 'Op.',
       dataIndex: 'operation',
-      width: "20%",
       render: (_, record) => {
         const editable = isEditing(record);
         return editable ? (
@@ -146,6 +122,9 @@ const EditableTable = (props) => {
             <Popconfirm title="Quieres cancelar la edición?" onConfirm={cancel}>
               <a>Cancelar</a>
             </Popconfirm>
+            <Popconfirm title="Eliminar entrada?" onConfirm={() => deleteEntry(record)}>
+              <a> Eliminar</a>
+            </Popconfirm>
           </span>
         ) : (
           <div>
@@ -160,7 +139,9 @@ const EditableTable = (props) => {
         );
       },
     },
-  ];
+  ]);
+
+  
   const mergedColumns = columns.map((col) => {
     if (!col.editable) {
       return col;
@@ -190,7 +171,7 @@ const EditableTable = (props) => {
         }
       }
       console.log(tempImgList);
-      props.imageUpdate(tempImgList);
+      imageUpdate(tempImgList);
     })
     
   }
@@ -217,6 +198,8 @@ const EditableTable = (props) => {
 //###########################
 function Principal() {  
   const [images, setImages] =useState([]);
+  const [data, setData] = useState([]);
+  const [allData, setAllData] = useState([]);
   const contentStyle = {
     maxHeight: '50vh',
     maxWidth: '100%',
@@ -225,18 +208,60 @@ function Principal() {
     textAlign: 'center',
     background: '#364d79',
   }; 
+  const columns = [
+    {
+      title: 'Categoria',
+      dataIndex: 'categoria',
+      width: "30%",
+      editable: true,
+    },
+    {
+      title: 'Articulo',
+      dataIndex: 'articulo',
+      width: "40%",
+      editable: true,
+      render: (text, record) => (
+        <div>
+            <a href={"/articulos?name="+text}>{text}</a>
+        </div>
+      ),
+    },
+    {
+      title: 'Cant.',
+      dataIndex: 'cantidad',
+      width: "10%",
+      editable: true,
+    },
+  ];
+
+  useEffect(() =>{
+    const inventarioRef = ref(database, "Inventario");
+    onValue(inventarioRef, (snapshot) => {
+      const data = snapshot.val();
+      const tempEntryList = [];
+      for(let i in data){
+        let entryObject = data[i];
+        entryObject["key"] = i;
+        tempEntryList.push(entryObject);
+        //console.log(entryObject);
+      }
+      setData(tempEntryList);
+      setAllData(tempEntryList);
+    })
+  }, []);
 
   function onSearch(query){
     console.log();
-    // const newData = [];
-    // query = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-    // for(let i in allData){
-    //   let normlizedEntry = allData[i]["detalles"]["Nombre"].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-    //   if(normlizedEntry.includes(query)){
-    //     newData.push(allData[i]);
-    //   }
-    // }
-    // setData(newData);
+    const newData = [];
+    query = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    for(let i in allData){
+      let normlizedArticulo = allData[i]["articulo"].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+      let normlizedCategoria = allData[i]["articulo"].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+      if(normlizedArticulo.includes(query) || normlizedCategoria.includes(query)){
+        newData.push(allData[i]);
+      }
+    }
+    setData(newData);
   }
 
   function nuevoArticulo(){
@@ -249,13 +274,21 @@ function Principal() {
     push(inventarioRef,entry);
   }
 
+  function deleteData(entry){
+    const inventarioRef = ref(database, "Inventario/");
+    const articulosRef = ref(database, "Articulos/");
+
+    set(child(inventarioRef,entry["key"]),null);
+    set(child(articulosRef,entry["articulo"]),null);
+  }
+
   return (
     <div>
       <div className ="contentHeader" style={{padding: "5px"}}>
-        <Search placeholder="Buscar"  allowClear style={{ width: 200}} />{/*onSearch={onSearch}*/}
+        <Search placeholder="Buscar"  allowClear onSearch={onSearch} style={{ width: 200}} />
         <Button type="primary" style={{float: "right"}} onClick={nuevoArticulo}>Nuevo Articulo</Button>
       </div>
-      <EditableTable imageUpdate = {setImages}/>
+      <EditableTable data={data} setData={setData} imageUpdate={setImages} preColums={columns} deleteData={deleteData}/>
       <Carousel >
         {images.map( (image, c) => {
           return(
