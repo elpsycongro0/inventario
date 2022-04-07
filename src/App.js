@@ -1,5 +1,5 @@
 import {React, useState} from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { Input, Button, Avatar, Breadcrumb, Layout } from 'antd';
 import { LogoutOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import 'antd/dist/antd.min.css';
@@ -33,6 +33,16 @@ function LogButton({isLogged, setisLogged}){
 }
 function App() {
   const[isLogged,setisLogged] = useState(false);
+  function requireAuth(nextState, replace, next) {
+    console.log("cheka login");
+    if (!isLogged) {
+      replace({
+        pathname: "/login",
+        state: {nextPathname: nextState.location.pathname}
+      });
+    }
+    next();
+  }  
   return(
     <div className="App">
       <Layout>
@@ -46,9 +56,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="login/" element={<Login isLogged={isLogged} setisLogged={setisLogged}/>} />
-                <Route path="principal/" element={<Principal />} />
-                <Route path="articulos/*" element={<Articulos />} />
-                <Route path="details/*" element={<Details />} />
+                <Route path="principal/" element={!isLogged ? <Navigate to="/login" /> : <Principal />}/>
+                <Route path="articulos/*" element={!isLogged ? <Navigate to="/login" /> : <Articulos />}/>
+                <Route path="details/*" element={!isLogged ? <Navigate to="/login" /> : <Details />}/>
               </Routes>
             </BrowserRouter>
           </Content>

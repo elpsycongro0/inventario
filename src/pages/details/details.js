@@ -1,11 +1,12 @@
 import { React, useEffect, useState} from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 import { useSearchParams } from "react-router-dom";
 import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Tabs, Divider, Progress } from 'antd';
 import { database, storage } from '../../Firebase/firebase';//database ref o  firebase.js
 import { ref, set, push, onValue, get, child } from "firebase/database";//database
 import { uploadBytesResumable, getDownloadURL, ref as sRef, deleteObject } from "firebase/storage";
-
+import UserProfile from '../miscelanea/userProfile';
 
 import ImageViewer from './components/imageViewer';
 
@@ -370,8 +371,11 @@ function Details(){
     <div>
       <div className ="contentHeader" style={{padding: "5px"}}>
         <Button type="primary" style={{float: "right"}} icon={<PlusOutlined />} onClick={nuevaEntrada}></Button>
-        <Button type="primary" style={{float: "right"}} icon={<ArrowLeftOutlined />} href={"/articulos?name="+searchParams.get("name")}></Button>
+        <Link to={"/articulos?name="+searchParams.get("name")}>
+          <Button type="primary" style={{float: "right"}} icon={<ArrowLeftOutlined />} ></Button>
+        </Link>
       </div>
+      
       <Tabs  defaultActiveKey="1" style={{width: "100%"}} onChange={manageOnChange}>
         <TabPane tab="Detalles" key="1">
           <EditableTable data={detailData} setData={setDetailData} saveData={saveData} deleteData={deleteData} preColums={columns}></EditableTable>

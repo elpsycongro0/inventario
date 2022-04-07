@@ -3,7 +3,7 @@ import { Input, Button, Layout } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Typography } from 'antd';
 import { Link } from 'react-router-dom';
-
+import UserProfile from '../miscelanea/userProfile';
 
 const { Title } = Typography;
 const {Content} = Layout;
@@ -20,12 +20,15 @@ function Login({isLogged, setisLogged}) {
     setContra(e.target.value)
   }
   function handleLogin(){
-    if(usuario === "admin" && contra === "123456"){
+    UserProfile.setName("entro");
+    if(usuario === "admin" && contra === "abcd1234"){
+      
       setisLogged(true);
     }
   }
   return(
     <div style={{padding:"20px", background:'#fff', margin:"auto", maxWidth:"80vw", }}>
+      {UserProfile.getName()}
       <Title level={2}>INGRESAR</Title>
       <Title level={4}>USUARIO</Title>
       <Input size="large" placeholder="Ingrese su usuario" prefix={<UserOutlined />} onChange={handleUserChange}/>

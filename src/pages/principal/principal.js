@@ -1,7 +1,9 @@
 import {React, useState, useEffect} from 'react';
+import { Link } from 'react-router-dom';
 import {Input, Carousel , Table, Tag, InputNumber, Popconfirm, Form, Typography, Button, Image } from 'antd';
 import { database } from '../../Firebase/firebase';//database ref o  firebase.js
 import { ref, set, push, onValue, get, child, remove } from "firebase/database";//database
+import UserProfile from '../miscelanea/userProfile';
 
 const { Search } = Input;
 
@@ -222,7 +224,8 @@ function Principal() {
       editable: true,
       render: (text, record) => (
         <div>
-            <a href={"/articulos?name="+text}>{text}</a>
+            <Link to={"/articulos?name="+text}>{text}</Link>
+              
         </div>
       ),
     },

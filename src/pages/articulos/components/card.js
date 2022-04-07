@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {Carousel} from 'antd';
 import { Typography, Image } from 'antd';
 import { useSearchParams } from "react-router-dom";
@@ -11,7 +12,9 @@ function Card(props) {
   const images = props.images;
   return(
     <div className ="cardContainer">
-      <a href={"/details/?name="+searchParams.get("name")+"&id="+props.id }><Title level={5}>{props.title}</Title></a>
+      <Link to={"/details/?name="+searchParams.get("name")+"&id="+props.id }>
+        <Title level={5}>{props.title}</Title>
+      </Link>
     </div>
   );
 }
