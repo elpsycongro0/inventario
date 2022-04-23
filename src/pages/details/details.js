@@ -71,10 +71,6 @@ const EditableTable = ({data, setData, saveData, preColums, deleteData}) => {
   };
   const deleteEntry = (record) => {
     //console.log(record);
-    if(record["atributo"]==="Nombre"){
-      setEditingKey('');
-      return;
-    }
     deleteData(record);
     setEditingKey('');
   };
