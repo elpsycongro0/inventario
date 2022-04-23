@@ -191,6 +191,11 @@ function Details(){
       editable: true,
     },
     {
+      title: 'Costo',
+      dataIndex: 'costo',
+      editable: true,
+    },
+    {
       title: 'Descripcion',
       dataIndex: 'descripcion',
       editable: true,
@@ -300,6 +305,7 @@ function Details(){
       const articulosRef = ref(database, "Articulos/"+searchParams.get("name")+"/"+searchParams.get("id")+"/historial");
       const entryObject = {
         fecha :new Date().toISOString().split('T')[0],
+        costo: "0",
         ocurrencia: "OCURRENCIA",
         descripcion: "descripcion",
         date: Date.now(),
