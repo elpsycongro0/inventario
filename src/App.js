@@ -10,8 +10,10 @@ import Login from "./pages/login/login";
 import Principal from "./pages/principal/principal";
 import Articulos from "./pages/articulos/articulos";
 import Details from "./pages/details/details"
+import Inventario from './pages/inventario/inventario';
 import { app } from './Firebase/firebase';
 import { is } from '@babel/types';
+
 
 const { Title } = Typography;
 const { Header, Footer, Sider, Content} = Layout;
@@ -59,6 +61,7 @@ function App() {
                 <Route path="principal/" element={!isLogged ? <Navigate to="/login" /> : <Principal />}/>
                 <Route path="articulos/*" element={!isLogged ? <Navigate to="/login" /> : <Articulos />}/>
                 <Route path="details/*" element={!isLogged ? <Navigate to="/login" /> : <Details />}/>
+                <Route path="inventario/*" element={!isLogged ? <Navigate to="/login" /> : <Inventario />}/>
               </Routes>
             </BrowserRouter>
           </Content>

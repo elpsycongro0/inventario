@@ -1,6 +1,6 @@
 import {React, useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
-import {Input, Carousel , Table, Tag, InputNumber, Popconfirm, Form, Typography, Button, Image } from 'antd';
+import {Input, Carousel , Table, Tag, InputNumber, Popconfirm, Form, Typography, Button, Image, Space } from 'antd';
 import { database } from '../../Firebase/firebase';//database ref o  firebase.js
 import { ref, set, push, onValue, get, child, remove } from "firebase/database";//database
 import UserProfile from '../miscelanea/userProfile';
@@ -290,6 +290,11 @@ function Principal() {
       <div className ="contentHeader" style={{padding: "5px"}}>
         <Search placeholder="Buscar"  allowClear onSearch={onSearch} style={{ width: 200}} />
         <Button type="primary" style={{float: "right"}} onClick={nuevoArticulo}>Nuevo Articulo</Button>
+        
+        <Link to="/inventario" style={{float: "right"}}>
+          <Button type="primary" >Inventario</Button>|
+        </Link>
+
       </div>
       <EditableTable data={data} setData={setData} imageUpdate={setImages} preColums={columns} deleteData={deleteData}/>
       <Carousel >
